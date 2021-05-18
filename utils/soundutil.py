@@ -80,55 +80,6 @@ def save_wav(path, mspec_power, sr, hop_length=None, n_fft=None):
     sf.write(path, wav, sr, subtype='PCM_24')
 
 
-def add_white_noise(x: np.ndarray, rate: float = 0.002) -> np.ndarray:
-    """
-    ホワイトノイズを追加する関数.
-
-    Args:
-        x (np.ndarray): 音声データ
-        rate (float, optional): ノイズの大きさを調節する係数. Defaults to 0.002.
-
-    Returns:
-        np.ndarray: ホワイトノイズを付加した音声データ
-    """
-    return x + rate * np.random.randn(len(x))
-
-
-def shift_sound(x: np.ndarray, rate: int = 2) -> np.ndarray:
-    """
-    時間軸上でシフトさせる関数.
-
-    Args:
-        x (np.ndarray): 音声データ
-        rate (int, optional): シフトする割合. Defaults to 2.
-
-    Returns:
-        np.ndarray: シフト後の音声データ
-    """
-    return np.roll(x, int(len(x) // rate))
-
-
-def stretch_sound(x: np.ndarray, rate: float = 1.1) -> np.ndarray:
-    """
-    音声を伸縮させる関数.
-
-    Args:
-        x (np.ndarray): 音声データ
-        rate (float, optional): 伸縮させる割合. Defaults to 1.1.
-
-    Returns:
-        np.ndarray: 伸縮後の音声
-    """
-    input_length = len(x)
-    x = librosa.effects.time_stretch(x, rate)
-
-    # 長すぎたら切り取り，短すぎたらパディング
-    if len(x) > input_length:
-        return x[:input_length]
-    else:
-        return np.pad(x, (0, max(0, input_length - len(x))), 'constant')
-
-
 if __name__ == '__main__':
     wav_path = 'data/human/jsut_basic5000/BASIC5000_0001.wav'
     # wav_path = 'data/not_human/esc50/1-137-A-32.wav'
