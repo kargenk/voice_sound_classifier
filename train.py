@@ -2,15 +2,17 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 from dataloader import MelspDataset, make_datapath_list
 from model import Classifier
 
 
-def train(net, dataloaders_dict, criterion, optimizer, num_epochs):
+def train(net, dataloaders_dict, criterion, optimizer, writer, num_epochs):
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
     net.to(device)
+    best_acc = 0
 
     for epoch in range(1, num_epochs + 1):
         print(f'Epoch {epoch}/{num_epochs}')
@@ -52,8 +54,17 @@ def train(net, dataloaders_dict, criterion, optimizer, num_epochs):
             epoch_acc = epoch_corrects.double() / len(dataloaders_dict[phase].dataset)
 
             print(f'{phase} Loss: {epoch_loss:.4f} Acc: {epoch_acc:.4f}')
+            # tensorboardにログを書き出し
+            writer.add_scalar(f'Loss/{phase}', epoch_loss, epoch)
+            writer.add_scalar(f'Accuracy/{phase}', epoch_acc, epoch)
+            writer.flush()
 
-        torch.save(model.state_dict(), f'models/ep{epoch}_acc{epoch_acc}.pt')
+            # valの正答率が高くなったらモデルを保存する
+            if phase == 'val':
+                if epoch_acc > best_acc:
+                    best_acc = epoch_acc
+                    torch.save(model.state_dict(), f'models/ep{epoch}_acc{epoch_acc:.4f}.pt')
+                    print(f'[SAVE] models/ep{epoch}_acc{epoch_acc:.4f}.pt')
 
 
 if __name__ == '__main__':
@@ -73,4 +84,6 @@ if __name__ == '__main__':
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters())
 
-    train(model, dataloaders_dict, criterion, optimizer, 2)
+    writer = SummaryWriter()
+
+    train(model, dataloaders_dict, criterion, optimizer, writer, 100)
