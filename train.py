@@ -86,4 +86,7 @@ if __name__ == '__main__':
 
     writer = SummaryWriter()
 
+    # モデルの構造をtensorboardに書き込む
+    writer.add_graph(model, torch.zeros((8, 1, 1025, 128)))
+
     train(model, dataloaders_dict, criterion, optimizer, writer, 100)
